@@ -2,67 +2,182 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>เกมเป่ายิ้งฉุบ</title>
+  <title>เกม OX พร้อมนับคะแนน</title>
   <style>
     body {
-      font-family: "Tahoma", sans-serif;
+      font-family: Arial, sans-serif;
       text-align: center;
-      background: #f0f8ff;
-      margin: 0;
-      padding: 40px;
+      background: #f0f4f8;
     }
     h1 {
-      color: #333;
-    }
-    button {
-      font-size: 18px;
-      padding: 10px 20px;
-      margin: 10px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background: #4CAF50;
-      color: white;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    #result {
       margin-top: 20px;
+    }
+    #scoreboard {
+      font-size: 18px;
+      margin: 15px 0;
+      background: #fff;
+      padding: 10px;
+      display: inline-block;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: #fff;
+      border: 2px solid #444;
+      font-size: 40px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .cell.taken {
+      cursor: not-allowed;
+      background: #f8f9fa;
+    }
+    #message {
       font-size: 20px;
+      margin: 10px;
       font-weight: bold;
-      color: #333;
+    }
+    .btn {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .btn.reset {
+      background: #dc3545;
+    }
+    .btn.reset:hover {
+      background: #a71d2a;
     }
   </style>
 </head>
 <body>
-  <h1>✊ ✌️ 🖐️ เกมเป่ายิ้งฉุบ</h1>
-  <p>เลือกตัวเลือกของคุณ:</p>
-  <button onclick="play('ค้อน')">ค้อน</button>
-  <button onclick="play('กรรไกร')">กรรไกร</button>
-  <button onclick="play('กระดาษ')">กระดาษ</button>
-  <p id="result"></p>
+  <h1>เกม OX</h1>
+  <div id="scoreboard">
+    X ชนะ: <span id="scoreX">0</span> |
+    O ชนะ: <span id="scoreO">0</span> |
+    เสมอ: <span id="scoreDraw">0</span>
+  </div>
+  <div id="board"></div>
+  <div id="message"></div>
+  <button class="btn" onclick="resetBoard()">เล่นรอบใหม่</button>
+  <button class="btn reset" onclick="resetScores()">รีเซ็ตคะแนนทั้งหมด</button>
 
   <script>
-    function play(user) {
-      const choices = ["ค้อน", "กรรไกร", "กระดาษ"];
-      const computer = choices[Math.floor(Math.random() * choices.length)];
-      let result = "คุณเลือก: " + user + "<br>คอมเลือก: " + computer + "<br>";
+    const board = document.getElementById("board");
+    const message = document.getElementById("message");
 
-      if (user === computer) {
-        result += "ผลลัพธ์: เสมอ!";
-      } else if (
-        (user === "ค้อน" && computer === "กรรไกร") ||
-        (user === "กรรไกร" && computer === "กระดาษ") ||
-        (user === "กระดาษ" && computer === "ค้อน")
-      ) {
-        result += "ผลลัพธ์: 🎉 คุณชนะ!";
-      } else {
-        result += "ผลลัพธ์: 😢 คุณแพ้!";
-      }
-      document.getElementById("result").innerHTML = result;
+    let currentPlayer = "X";
+    let gameActive = true;
+
+    // คะแนน
+    let scoreX = 0;
+    let scoreO = 0;
+    let scoreDraw = 0;
+
+    // สร้างกระดาน 3x3
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
+      cell.addEventListener("click", () => handleCellClick(cell, i));
+      board.appendChild(cell);
     }
+
+    function handleCellClick(cell, index) {
+      if (!gameActive || cell.classList.contains("taken")) return;
+
+      cell.textContent = currentPlayer;
+      cell.classList.add("taken");
+
+      if (checkWin()) {
+        message.textContent = `🎉 ผู้เล่น ${currentPlayer} ชนะ!`;
+        if (currentPlayer === "X") scoreX++;
+        else scoreO++;
+        updateScoreboard();
+        gameActive = false;
+        return;
+      }
+
+      if (isDraw()) {
+        message.textContent = "😐 เสมอกัน!";
+        scoreDraw++;
+        updateScoreboard();
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+      message.textContent = `ถึงตาของผู้เล่น ${currentPlayer}`;
+    }
+
+    function checkWin() {
+      const cells = document.querySelectorAll(".cell");
+      const winPatterns = [
+        [0,1,2], [3,4,5], [6,7,8], // แถว
+        [0,3,6], [1,4,7], [2,5,8], // คอลัมน์
+        [0,4,8], [2,4,6]           // ทแยง
+      ];
+
+      return winPatterns.some(pattern => {
+        const [a, b, c] = pattern;
+        return (
+          cells[a].textContent &&
+          cells[a].textContent === cells[b].textContent &&
+          cells[a].textContent === cells[c].textContent
+        );
+      });
+    }
+
+    function isDraw() {
+      return [...document.querySelectorAll(".cell")].every(cell => cell.textContent !== "");
+    }
+
+    function resetBoard() {
+      const cells = document.querySelectorAll(".cell");
+      cells.forEach(cell => {
+        cell.textContent = "";
+        cell.classList.remove("taken");
+      });
+      currentPlayer = "X";
+      message.textContent = `ถึงตาของผู้เล่น ${currentPlayer}`;
+      gameActive = true;
+    }
+
+    function resetScores() {
+      scoreX = 0;
+      scoreO = 0;
+      scoreDraw = 0;
+      updateScoreboard();
+      message.textContent = "✨ คะแนนถูกรีเซ็ตแล้ว!";
+    }
+
+    function updateScoreboard() {
+      document.getElementById("scoreX").textContent = scoreX;
+      document.getElementById("scoreO").textContent = scoreO;
+      document.getElementById("scoreDraw").textContent = scoreDraw;
+    }
+
+    // เริ่มเกม
+    message.textContent = `ถึงตาของผู้เล่น ${currentPlayer}`;
   </script>
 </body>
 </html>
