@@ -2,182 +2,348 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>เกม OX พร้อมนับคะแนน</title>
+  <title>เกม OX การ์ตูนน่ารัก + Confetti + Sound</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Patrick Hand', cursive;
       text-align: center;
-      background: #f0f4f8;
+      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 20px;
+      color: #333;
+      overflow-x: hidden;
     }
+
     h1 {
       margin-top: 20px;
+      font-size: 2.5em;
+      color: #d84315;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+      animation: bounce 1s infinite alternate;
     }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-8px); }
+    }
+
+    #difficulty {
+      padding: 10px 14px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 2px solid #d84315;
+      margin: 10px;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    #difficulty:hover {
+      transform: scale(1.05);
+      background: #ffcc80;
+    }
+
     #scoreboard {
       font-size: 18px;
       margin: 15px 0;
-      background: #fff;
-      padding: 10px;
+      background: #ffffffcc;
+      padding: 12px 20px;
       display: inline-block;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border-radius: 16px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
     }
+    #scoreboard:hover { transform: scale(1.05); }
+
     #board {
       display: grid;
       grid-template-columns: repeat(3, 100px);
       grid-template-rows: repeat(3, 100px);
-      gap: 5px;
+      gap: 12px;
       justify-content: center;
       margin: 20px auto;
+      animation: shake 0.5s;
     }
+
+    @keyframes shake {
+      0% { transform: rotate(0deg); }
+      25% { transform: rotate(1deg); }
+      50% { transform: rotate(0deg); }
+      75% { transform: rotate(-1deg); }
+      100% { transform: rotate(0deg); }
+    }
+
     .cell {
       width: 100px;
       height: 100px;
-      background: #fff;
-      border: 2px solid #444;
-      font-size: 40px;
+      background: #fff8e1;
+      border-radius: 16px;
+      border: 3px solid #ff6f00;
+      font-size: 44px;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
+      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      position: relative;
     }
-    .cell.taken {
-      cursor: not-allowed;
-      background: #f8f9fa;
+    .cell:hover {
+      transform: scale(1.1) rotate(-2deg);
+      background: #ffe082;
+      border-color: #ff8f00;
     }
+    .cell.taken { cursor: not-allowed; background: #ffecb3; color: #555; transform: scale(1) rotate(0); }
+
+    .cell span {
+      display: inline-block;
+      animation: pop 0.4s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+      60% { transform: scale(1.2) rotate(15deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
     #message {
-      font-size: 20px;
-      margin: 10px;
+      font-size: 22px;
+      margin: 15px 0;
       font-weight: bold;
+      color: #d84315;
+      min-height: 28px;
+      animation: glow 1s infinite alternate;
     }
+
+    @keyframes glow {
+      0% { text-shadow: 0 0 5px #d84315; }
+      100% { text-shadow: 0 0 20px #ff5722; }
+    }
+
     .btn {
-      margin: 10px;
-      padding: 10px 20px;
+      margin: 10px 5px;
+      padding: 10px 22px;
       font-size: 16px;
       cursor: pointer;
       border: none;
-      border-radius: 5px;
-      background: #007bff;
+      border-radius: 10px;
+      background: #ff6f00;
       color: white;
+      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    .btn:hover {
-      background: #0056b3;
-    }
+    .btn:hover { transform: scale(1.1); background: #ff8f00; }
     .btn.reset {
-      background: #dc3545;
+      background: #d32f2f;
     }
-    .btn.reset:hover {
-      background: #a71d2a;
+    .btn.reset:hover { background: #f44336; transform: scale(1.1); }
+
+    /* Confetti container */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
     }
+
+    @media (max-width: 500px) {
+      #board {
+        grid-template-columns: repeat(3, 70px);
+        grid-template-rows: repeat(3, 70px);
+        gap: 8px;
+      }
+      .cell { width: 70px; height: 70px; font-size: 36px; }
+    }
+
   </style>
 </head>
 <body>
-  <h1>เกม OX</h1>
+  <h1>🎮 เกม OX สนุก ๆ</h1>
+  
+  <label>ระดับความยาก:</label>
+  <select id="difficulty">
+    <option value="easy">ง่าย</option>
+    <option value="medium">ปานกลาง</option>
+    <option value="hard">ยาก</option>
+  </select>
+
   <div id="scoreboard">
-    X ชนะ: <span id="scoreX">0</span> |
-    O ชนะ: <span id="scoreO">0</span> |
+    ผู้เล่นชนะ: <span id="scorePlayer">0</span> |
+    คอมชนะ: <span id="scoreComputer">0</span> |
     เสมอ: <span id="scoreDraw">0</span>
   </div>
+
   <div id="board"></div>
   <div id="message"></div>
+
   <button class="btn" onclick="resetBoard()">เล่นรอบใหม่</button>
   <button class="btn reset" onclick="resetScores()">รีเซ็ตคะแนนทั้งหมด</button>
 
+  <canvas id="confetti-canvas"></canvas>
+
+  <audio id="soundX" src="https://assets.codepen.io/605876/X-sound.mp3"></audio>
+  <audio id="soundO" src="https://assets.codepen.io/605876/O-sound.mp3"></audio>
+  <audio id="soundWin" src="https://assets.codepen.io/605876/win-sound.mp3"></audio>
+  <audio id="soundDraw" src="https://assets.codepen.io/605876/draw-sound.mp3"></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script>
     const board = document.getElementById("board");
     const message = document.getElementById("message");
+    const difficultySelect = document.getElementById("difficulty");
+    const confettiCanvas = document.getElementById("confetti-canvas");
+    const soundX = document.getElementById("soundX");
+    const soundO = document.getElementById("soundO");
+    const soundWin = document.getElementById("soundWin");
+    const soundDraw = document.getElementById("soundDraw");
 
-    let currentPlayer = "X";
     let gameActive = true;
+    let scorePlayer = 0;
+    let scoreComputer = 0;
+    let scoreDrawCount = 0;
 
-    // คะแนน
-    let scoreX = 0;
-    let scoreO = 0;
-    let scoreDraw = 0;
-
-    // สร้างกระดาน 3x3
-    for (let i = 0; i < 9; i++) {
+    // สร้างกระดาน
+    for (let i=0;i<9;i++){
       const cell = document.createElement("div");
       cell.classList.add("cell");
-      cell.addEventListener("click", () => handleCellClick(cell, i));
+      cell.addEventListener("click",()=>handlePlayerMove(cell));
       board.appendChild(cell);
     }
 
-    function handleCellClick(cell, index) {
-      if (!gameActive || cell.classList.contains("taken")) return;
+    function handlePlayerMove(cell){
+      if(!gameActive || cell.classList.contains("taken")) return;
 
-      cell.textContent = currentPlayer;
+      cell.innerHTML = "<span>X</span>";
       cell.classList.add("taken");
+      soundX.play();
 
-      if (checkWin()) {
-        message.textContent = `🎉 ผู้เล่น ${currentPlayer} ชนะ!`;
-        if (currentPlayer === "X") scoreX++;
-        else scoreO++;
+      if(checkWin("X")){
+        message.textContent = "🎉 ผู้เล่นชนะ!";
+        scorePlayer++;
         updateScoreboard();
-        gameActive = false;
+        gameActive=false;
+        soundWin.play();
+        confettiEffect();
         return;
       }
 
-      if (isDraw()) {
+      if(isDraw()){
         message.textContent = "😐 เสมอกัน!";
-        scoreDraw++;
+        scoreDrawCount++;
         updateScoreboard();
-        gameActive = false;
+        gameActive=false;
+        soundDraw.play();
         return;
       }
 
-      currentPlayer = currentPlayer === "X" ? "O" : "X";
-      message.textContent = `ถึงตาของผู้เล่น ${currentPlayer}`;
+      setTimeout(computerMove, 400);
     }
 
-    function checkWin() {
-      const cells = document.querySelectorAll(".cell");
-      const winPatterns = [
-        [0,1,2], [3,4,5], [6,7,8], // แถว
-        [0,3,6], [1,4,7], [2,5,8], // คอลัมน์
-        [0,4,8], [2,4,6]           // ทแยง
-      ];
+    function computerMove(){
+      const emptyCells = Array.from(document.querySelectorAll(".cell")).filter(c=>!c.classList.contains("taken"));
+      if(emptyCells.length===0) return;
 
-      return winPatterns.some(pattern => {
-        const [a, b, c] = pattern;
-        return (
-          cells[a].textContent &&
-          cells[a].textContent === cells[b].textContent &&
-          cells[a].textContent === cells[c].textContent
-        );
+      let chosenCell;
+      const difficulty = difficultySelect.value;
+
+      if(difficulty==="easy"){
+        chosenCell = emptyCells[Math.floor(Math.random()*emptyCells.length)];
+      } else if(difficulty==="medium"){
+        chosenCell = findWinningOrBlockingMove("X") || emptyCells[Math.floor(Math.random()*emptyCells.length)];
+      } else if(difficulty==="hard"){
+        chosenCell = findWinningOrBlockingMove("O") || findWinningOrBlockingMove("X") || emptyCells[Math.floor(Math.random()*emptyCells.length)];
+      }
+
+      chosenCell.innerHTML = "<span>O</span>";
+      chosenCell.classList.add("taken");
+      soundO.play();
+
+      if(checkWin("O")){
+        message.textContent = "💻 คอมชนะ!";
+        scoreComputer++;
+        updateScoreboard();
+        gameActive=false;
+        soundWin.play();
+        confettiEffect();
+        return;
+      }
+
+      if(isDraw()){
+        message.textContent = "😐 เสมอกัน!";
+        scoreDrawCount++;
+        updateScoreboard();
+        gameActive=false;
+        soundDraw.play();
+        return;
+      }
+
+      message.textContent = "ถึงตาของผู้เล่น X";
+    }
+
+    function checkWin(player){
+      const cells=document.querySelectorAll(".cell");
+      const patterns=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+      return patterns.some(p=>{
+        const [a,b,c]=p;
+        return cells[a].textContent===player && cells[b].textContent===player && cells[c].textContent===player;
       });
     }
 
-    function isDraw() {
-      return [...document.querySelectorAll(".cell")].every(cell => cell.textContent !== "");
+    function isDraw(){
+      return [...document.querySelectorAll(".cell")].every(c=>c.classList.contains("taken")) && gameActive;
     }
 
-    function resetBoard() {
-      const cells = document.querySelectorAll(".cell");
-      cells.forEach(cell => {
-        cell.textContent = "";
-        cell.classList.remove("taken");
-      });
-      currentPlayer = "X";
-      message.textContent = `ถึงตาของผู้เล่น ${currentPlayer}`;
-      gameActive = true;
+    function findWinningOrBlockingMove(player){
+      const cells=document.querySelectorAll(".cell");
+      const patterns=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+      for(const p of patterns){
+        const [a,b,c]=p;
+        const marks=[cells[a].textContent, cells[b].textContent, cells[c].textContent];
+        if(marks.filter(x=>x===player).length===2 && marks.includes("")){
+          const emptyIndex = [a,b,c].find(i=>cells[i].textContent==="");
+          return cells[emptyIndex];
+        }
+      }
+      return null;
     }
 
-    function resetScores() {
-      scoreX = 0;
-      scoreO = 0;
-      scoreDraw = 0;
+    function resetBoard(){
+      const cells=document.querySelectorAll(".cell");
+      cells.forEach(c=>{c.textContent=""; c.classList.remove("taken");});
+      gameActive=true;
+      message.textContent="ถึงตาของผู้เล่น X";
+      board.style.animation = 'shake 0.5s'; // เคลื่อนไหวสนุก
+      setTimeout(()=>{board.style.animation='none';},500);
+    }
+
+    function resetScores(){
+      scorePlayer=0; scoreComputer=0; scoreDrawCount=0;
       updateScoreboard();
-      message.textContent = "✨ คะแนนถูกรีเซ็ตแล้ว!";
+      message.textContent="✨ คะแนนถูกรีเซ็ตแล้ว!";
     }
 
-    function updateScoreboard() {
-      document.getElementById("scoreX").textContent = scoreX;
-      document.getElementById("scoreO").textContent = scoreO;
-      document.getElementById("scoreDraw").textContent = scoreDraw;
+    function updateScoreboard(){
+      document.getElementById("scorePlayer").textContent=scorePlayer;
+      document.getElementById("scoreComputer").textContent=scoreComputer;
+      document.getElementById("scoreDraw").textContent=scoreDrawCount;
     }
 
-    // เริ่มเกม
-    message.textContent = `ถึงตาของผู้เล่น ${currentPlayer}`;
+    function confettiEffect(){
+      confetti({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+
+    message.textContent="ถึงตาของผู้เล่น X";
   </script>
 </body>
 </html>
