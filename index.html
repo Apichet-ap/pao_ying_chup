@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เกมเป่ายิ้งฉุบ</title>
+  <style>
+    body {
+      font-family: "Tahoma", sans-serif;
+      text-align: center;
+      background: #f0f8ff;
+      margin: 0;
+      padding: 40px;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #4CAF50;
+      color: white;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>✊ ✌️ 🖐️ เกมเป่ายิ้งฉุบ</h1>
+  <p>เลือกตัวเลือกของคุณ:</p>
+  <button onclick="play('ค้อน')">ค้อน</button>
+  <button onclick="play('กรรไกร')">กรรไกร</button>
+  <button onclick="play('กระดาษ')">กระดาษ</button>
+  <p id="result"></p>
+
+  <script>
+    function play(user) {
+      const choices = ["ค้อน", "กรรไกร", "กระดาษ"];
+      const computer = choices[Math.floor(Math.random() * choices.length)];
+      let result = "คุณเลือก: " + user + "<br>คอมเลือก: " + computer + "<br>";
+
+      if (user === computer) {
+        result += "ผลลัพธ์: เสมอ!";
+      } else if (
+        (user === "ค้อน" && computer === "กรรไกร") ||
+        (user === "กรรไกร" && computer === "กระดาษ") ||
+        (user === "กระดาษ" && computer === "ค้อน")
+      ) {
+        result += "ผลลัพธ์: 🎉 คุณชนะ!";
+      } else {
+        result += "ผลลัพธ์: 😢 คุณแพ้!";
+      }
+      document.getElementById("result").innerHTML = result;
+    }
+  </script>
+</body>
+</html>
